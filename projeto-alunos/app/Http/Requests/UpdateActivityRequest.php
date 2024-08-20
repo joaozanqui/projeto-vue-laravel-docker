@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateActivityRequest extends ApiFormRequest
 {
@@ -21,8 +22,10 @@ class UpdateActivityRequest extends ApiFormRequest
      */
     public function rules(): array
     {
+        $activityId = $this->route('activity');
+
         return [
-            'name' => ['string', 'max:255', 'unique:activities,name'],
+            'name' => ['string', 'max:255', Rule::unique('activities', 'name')->whereNull('deleted_at')->ignore($activityId)],
             'description' => ['string', 'max:1023']
         ];
     }

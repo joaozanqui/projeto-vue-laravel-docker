@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateActivityRequest extends ApiFormRequest
 {
@@ -22,7 +23,7 @@ class CreateActivityRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:activities,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('activities', 'name')->whereNull('deleted_at')],
             'description' => ['required', 'string', 'max:1023']
         ];
     }

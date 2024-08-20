@@ -1,7 +1,8 @@
 version: '3.3'
 services:
-  projeto-alunos:
+  api:
     build: ./
+    container_name: laravel
     ports:
       - "9000:80"
     volumes:
@@ -11,6 +12,19 @@ services:
       - db
     networks: 
       - docker
+  
+  app:
+    build:
+      context: ./html
+      dockerfile: ./html/Dockerfile
+    container_name: vue
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./html:/app
+    networks: 
+      - docker
+    
 
   db:
     image: mysql

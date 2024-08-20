@@ -5,7 +5,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /usr/share/nginx/html
 
-RUN ln -s public html
+RUN [ ! -L html ] && ln -s public html || echo "Link 'html' already exists"
 RUN apt update; \
     apt install vim -y
 

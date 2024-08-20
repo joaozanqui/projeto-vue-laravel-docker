@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateStudentRequest extends ApiFormRequest
 {
@@ -23,8 +24,8 @@ class CreateStudentRequest extends ApiFormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'ra' => ['required', 'string', 'size:10', 'unique:students,ra'],
-            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:students,email']
+            'ra' => ['required', 'numeric', 'digits:10', Rule::unique('students', 'ra')->whereNull('deleted_at')],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', Rule::unique('students', 'email')->whereNull('deleted_at')]
         ];
     }
 }
