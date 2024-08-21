@@ -285,8 +285,13 @@
                     </v-card-item>
 
                     <v-list>
+                        <v-card-title v-if="filteredItens('students').length == 0">
+                            <span class="text-h5"
+                                >O Aluno já foi registrado em todas as atividades disponíveis.</span
+                            >
+                        </v-card-title>
                         <v-list-item
-                            v-for="(activity, index) in activities"
+                            v-for="(activity, index) in filteredItens('students')"
                             :key="activity.id"
                             class="clickable-item text-capitalize font-weight-bold"
                         >
@@ -310,8 +315,7 @@
                                     ></v-checkbox>
                                 </v-list-item-title>
                                 <v-divider
-                                    v-if="index < activities.length"
-                                    class="mx-2"
+                                    v-if="index < filteredItens('activities').length"
                                 ></v-divider>
                             </v-list-item-content>
                         </v-list-item>
@@ -617,8 +621,14 @@
                     </v-card-item>
 
                     <v-list>
+                        <v-card-title v-if="filteredItens('activities').length == 0">
+                            <span class="text-h5"
+                                >Todos os Alunos disponíveis já foram registrados na Atividade.</span
+                            >
+                        </v-card-title>
+
                         <v-list-item
-                            v-for="(student, index) in students"
+                            v-for="(student, index) in filteredItens('activities')"
                             :key="student.id"
                             class="clickable-item text-capitalize font-weight-bold"
                         >
@@ -642,8 +652,7 @@
                                     ></v-checkbox>
                                 </v-list-item-title>
                                 <v-divider
-                                    v-if="index < students.length"
-                                    class="mx-2"
+                                    v-if="index < filteredItens('activities').length"
                                 ></v-divider>
                             </v-list-item-content>
                         </v-list-item>
@@ -740,7 +749,6 @@ export default {
         },
         // Store e Update
         async registerClick(search, edit) {
-            console.log(search);
             this.loading = true;
             this.successMessage = "";
             this.errorMessage = "";
@@ -777,6 +785,7 @@ export default {
                             },
                         }
                     );
+                    console.log("editção feita: ", this.selectedItem);
                 }
                 console.log("Dados enviados com sucesso:", res.data);
 
@@ -785,12 +794,6 @@ export default {
                 this.ra = "";
                 this.description = "";
                 this.successMessage = "Dados enviados com sucesso!";
-
-                if(search == 'students')
-                  this.refreshInfos(this.selectedItem, null);
-                else if(search == 'activities')
-                  this.refreshInfos(null, this.selectedItem);
-            
             } catch (error) {
                 if (error.response) {
                     console.error("Erro ao enviar dados:", error.response.data);
@@ -817,7 +820,7 @@ export default {
         async handleDelete(search, item) {
             try {
                 const res = await api.delete(`/${search}/${item.id}`);
-                console.log(res);
+                console.log("Delete-", res);
                 if (search == "students") this.dialogStudent = false;
                 else if (search == "activities") this.dialogActivity = false;
                 this.refreshData();
@@ -844,14 +847,16 @@ export default {
 
         // Fechar Modal
         closeDialog(dialog) {
-            console.log(dialog);
             this.dialogRegisterStudent = false;
             this.dialogRegisterActivity = false;
             this.successMessage = "";
             this.errorMessage = "";
-            this.refreshData(); 
+            this.refreshData();
 
-            if (dialog != "delete" && dialog != "add" && !this.edit) {
+            console.log(this.edit, dialog);
+
+            if (dialog == "item" || (!this.edit && dialog == "register")) {
+                console.log("entrou");
                 this.dialogStudent = false;
                 this.dialogActivity = false;
             }
@@ -867,12 +872,36 @@ export default {
             this.description = "";
         },
 
+        //Mostrar itens
+        filteredItens(search) {
+            // if(search == 'students') {
+            //     console.log("stu");
+            // }
+            // return this.activities.filter((activity) => {
+            //         return !this.studentActivities.some(
+            //             (studentActivity) => studentActivity.id === activity.id
+            //         );
+            //     });
+            if (search == 'students') {
+                return this.activities.filter((activity) => {
+                    return !this.studentActivities.some(
+                        (studentActivity) => studentActivity.id === activity.id
+                    );
+                });
+            } else if (search == 'activities') {
+                return this.students.filter((student) => {
+                    return !this.activityStudents.some(
+                        (activityStudent) => activityStudent.id === student.id
+                    );
+                });
+            }
+        },
+
         // Registros
         async getStudentActivities(student) {
             try {
                 const res = await api.get(`/students/${student.id}/activities`);
                 this.studentActivities = res.data;
-                console.log(this.studentActivities);
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
             }
@@ -931,18 +960,21 @@ export default {
                             `/students/${this.selectedItem.id}/activities/${activityId}`
                         );
                     }
-                    this.refreshInfos(this.selectedItem, null);
                 } else if (search == "activities") {
                     for (const studentId of this.selectedStudents) {
                         await api.post(
                             `/students/${studentId}/activities/${this.selectedItem.id}`
                         );
                     }
-                    this.refreshInfos(null, this.selectedItem);
                 }
 
                 console.log("Dados enviados com sucesso!");
+                this.selectedActivities = [];
                 this.closeDialog("add");
+                if (search == "students")
+                    this.refreshInfos(this.selectedItem, null);
+                else if (search == "activities")
+                    this.refreshInfos(null, this.selectedItem);
                 this.successMessage = "Dados enviados com sucesso!";
             } catch (error) {
                 if (error.response) {
@@ -958,11 +990,10 @@ export default {
 
         async deleteEnroll(student, activity) {
             try {
-                console.log(`/students${student.id}/activities${activity.id}`);
                 const res = await api.delete(
                     `/students/${student.id}/activities/${activity.id}`
                 );
-                console.log(res);
+                console.log("Delete-", res);
                 this.refreshData();
                 this.refreshInfos(student, activity);
             } catch (error) {
@@ -978,21 +1009,15 @@ export default {
 
         refreshInfos(student = null, activity = null) {
             if (student) {
-                // this.dialogStudent = false;
                 this.getStudentActivities(student);
-                // this.searchClick('students', student);
-            }
-            if (activity) {
-                // this.dialogActivity = false;
+            } else if (activity) {
                 this.getActivityStudents(activity);
-                // this.searchClick('activities', activity);
             }
         },
     },
 
     created() {
         this.refreshData();
-        this.refreshInfos();
     },
 };
 </script>
