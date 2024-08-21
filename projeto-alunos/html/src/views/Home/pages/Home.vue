@@ -405,14 +405,14 @@
 
                         <v-alert
                             v-if="successMessage"
-                            title="Aluno registrado!"
+                            title="Atividade registrada!"
                             type="success"
                         >
                             {{ successMessage }}
                         </v-alert>
                         <v-alert
                             v-if="errorMessage"
-                            title="Erro ao registrar aluno!"
+                            title="Erro ao registrar atividade!"
                             type="error"
                         >
                             {{ errorMessage }}
